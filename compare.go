@@ -31,9 +31,22 @@ func Compare(a, b *Document, o *Options) (r *Result, err error) {
 		}
 	}
 	cfg := opts.alignConfig()
+	if (a.format == FormatXlsx) != (b.format == FormatXlsx) {
+		return nil, fmt.Errorf("%w: a workbook can only be compared with another workbook", ErrMismatch)
+	}
+	pa, pb := a.parts, b.parts
+	var extra []Note
+	if (a.format == FormatDocx) != (b.format == FormatDocx) {
+		// Plain text has nothing to match headers or notes against: they
+		// would all show as removed, which says nothing about the text.
+		pa, pb = bodies(pa), bodies(pb)
+		if len(pa) < len(a.parts) || len(pb) < len(b.parts) {
+			extra = append(extra, Note{Code: "body-only", Message: "Only the main text was compared: plain text has no headers, footers, notes or comments to compare with."})
+		}
+	}
 	c := &comparer{o: &opts, norm: opts.norm(), cfg: cfg, al: align.New(cfg)}
 	r = &Result{A: sideOf(a), B: sideOf(b), Parts: []PartDiff{}}
-	for _, pp := range matchParts(a.parts, b.parts) {
+	for _, pp := range matchParts(pa, pb) {
 		pd := c.part(pp[0], pp[1])
 		r.Parts = append(r.Parts, pd)
 		r.Stats.add(pd.Stats)
@@ -45,7 +58,7 @@ func Compare(a, b *Document, o *Options) (r *Result, err error) {
 			r.Equal = false
 		}
 	}
-	r.Notes = notes(a, b, r)
+	r.Notes = append(notes(a, b, r), extra...)
 	return r, nil
 }
 
@@ -476,4 +489,14 @@ func endingName(e LineEnding) string {
 		return "mixed line endings"
 	}
 	return "Unix line endings (LF)"
+}
+
+func bodies(ps []*part) []*part {
+	var out []*part
+	for _, p := range ps {
+		if p.kind == PartBody {
+			out = append(out, p)
+		}
+	}
+	return out
 }

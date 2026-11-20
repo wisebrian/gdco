@@ -76,6 +76,11 @@ func writeHunk(o *out, h Hunk) {
 func unifiedLine(o *out, prefix byte, l *Line) {
 	o.byte(prefix)
 	text := l.Text
+	if l.Marker != "" {
+		// The list number is part of what the reader sees, though it is not
+		// compared.
+		text = l.Marker + " " + text
+	}
 	if strings.ContainsAny(text, "\r\n") {
 		// Lines are split at every terminator, so this is only a safety
 		// net: a raw newline here would corrupt the diff.

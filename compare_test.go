@@ -232,7 +232,7 @@ func TestRead(t *testing.T) {
 		{"1252", "caf\xE9\n", EncodingWindows1252, nil},
 		{"binary", "a\x00b", "", ErrBinary},
 		{"pdf", "%PDF-1.7\n", "", ErrUnsupported},
-		{"zip", "PK\x03\x04rest", "", ErrUnsupported},
+		{"broken zip", "PK\x03\x04rest", "", ErrMalformed},
 		{"ole", "\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1", "", ErrUnsupported},
 		{"rtf", `{\rtf1\ansi}`, "", ErrUnsupported},
 	}

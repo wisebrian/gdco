@@ -1,9 +1,9 @@
 # gdco
 
-Compares two texts and shows what changed, in Go with only the standard
-library, so that it can run as WebAssembly in a browser: the files people
-compare never leave their machine. Word (`.docx`) and Excel (`.xlsx`)
-support are coming in the next phases.
+Compares two texts or two Word documents and shows what changed, in Go
+with only the standard library, so that it can run as WebAssembly in a
+browser: the files people compare never leave their machine. Excel
+(`.xlsx`) support is coming in the next phase.
 
 - Lines are aligned with Myers' O(ND) algorithm in linear space. Lines that
   replaced each other are then compared word by word, or character by
@@ -13,6 +13,16 @@ support are coming in the next phases.
 - Results come as a structured value (JSON for JavaScript), as a unified
   diff that `patch` and `git apply` accept, and as a self-contained HTML
   report that works in light and dark mode and prints.
+- Word documents (`.docx`, `.docm`, `.dotx`) are read in reading order:
+  paragraphs and table rows become lines, text boxes follow the paragraph
+  that anchors them, tracked changes are read as accepted (or rejected),
+  list numbers are shown but not compared, so inserting clause 3 does not
+  mark clauses 4 to 40. Headers, footers, footnotes, endnotes and comments
+  are compared as parts of their own. Every line knows where it is:
+  "Table 2, row 3", "Footnote 1", "Page 4, paragraph 12".
+- Zip and XML input is treated as hostile: sizes, entry counts, compression
+  ratios and XML nesting are bounded, and no entity or DTD is ever
+  resolved.
 - Text arrives as bytes (UTF-8, UTF-16 with a byte order mark, or
   Windows-1252), as a string, or as labelled segments such as the pages of a
   PDF whose text was extracted elsewhere.
@@ -48,7 +58,9 @@ diff or the HTML report when `options.output` is `"unified"` or `"html"`.
 A failure returns `{error, code}` instead. The options are `ignoreCase`,
 `ignoreSpaceChange`, `ignoreAllSpace`, `ignoreTrailingSpace`,
 `ignoreBlankLines`, `granularity` (`"word"`, `"char"`, `"line"`), `context`
-(lines, `-1` for the whole document), `nameA`, `nameB` and
+(lines, `-1` for the whole document), `nameA`, `nameB`, for Word documents
+`tracked` (`"accepted"`, `"original"`) and `headers`, `footers`, `footnotes`,
+`endnotes`, `comments` (all `true` by default), and
 `report: {title, layout, generated}`.
 
 ## Limits worth knowing

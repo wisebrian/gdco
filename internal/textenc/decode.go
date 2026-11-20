@@ -143,3 +143,7 @@ func decode1252(b []byte) string {
 	}
 	return sb.String()
 }
+
+// DecodeWindows1252 decodes b as Windows-1252, for XML parts that declare
+// a Latin encoding: Latin-1 is a subset of it.
+func DecodeWindows1252(b []byte) string { return decode1252(b) }

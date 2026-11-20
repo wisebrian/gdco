@@ -143,6 +143,9 @@ func Read(f File, o *Options) (d *Document, err error) {
 	if int64(len(f.Data)) > opts.Limits.MaxFileSize {
 		return nil, fmt.Errorf("%w: %s is %d bytes, more than %d", ErrLimit, display(f.Name), len(f.Data), opts.Limits.MaxFileSize)
 	}
+	if isZip(f.Data) {
+		return readOffice(f, &opts)
+	}
 	if err := sniff(f); err != nil {
 		return nil, err
 	}
@@ -167,8 +170,6 @@ func sniff(f File) error {
 	b := f.Data
 	name := display(f.Name)
 	switch {
-	case bytes.HasPrefix(b, []byte("PK\x03\x04")), bytes.HasPrefix(b, []byte("PK\x05\x06")):
-		return fmt.Errorf("%w: %s is a zip archive; Word and Excel files are not supported yet", ErrUnsupported, name)
 	case bytes.HasPrefix(b, []byte("%PDF-")):
 		return fmt.Errorf("%w: %s is a PDF; extract its text first", ErrUnsupported, name)
 	case bytes.HasPrefix(b, []byte("\xD0\xCF\x11\xE0\xA1\xB1\x1A\xE1")):
@@ -194,4 +195,8 @@ func valid(s string) string {
 		return s
 	}
 	return strings.ToValidUTF8(s, "�")
+}
+
+func isZip(b []byte) bool {
+	return bytes.HasPrefix(b, []byte("PK\x03\x04")) || bytes.HasPrefix(b, []byte("PK\x05\x06"))
 }
