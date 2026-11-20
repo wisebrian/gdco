@@ -1,0 +1,26 @@
+== body
+p1||Service Agreement
+p2||This agreement is made between Omega SRL and Beta SA on 1 March 2026.
+p3|1.(#0)|Services
+p4|1.1.(#1)|The Supplier shall deliver the software within 45 days.
+p5|1.2.(#1)|The Supplier shall provide support during business hours.
+p6|2.(#0)|Warranty
+p7|3.(#0)|Fees
+p8|4.(#0)|Term
+p9|5.(#0)|Governing law
+p10|•(•0)|Monthly report
+p11|•(•0)|Annual review
+t1 r1||Item | Qty | Price
+t1 r2||Licence | 1 | 1000
+t1 r3||Training | 2 | 300
+t1 r4||Support | 12 | 60
+p12||Prices exclude VAT.[footnote]
+p13||Signed in Bucharest.
+tb1 p1||Stamp and signature area
+== headers
+i1 p1||Service Agreement – Strictly confidential
+== footers
+i1 p1||Alpha SRL and Beta SA
+== footnotes
+i1 p1||VAT is charged at 21%.
+== tracked changes

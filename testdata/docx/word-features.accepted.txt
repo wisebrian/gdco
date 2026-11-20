@@ -1,0 +1,34 @@
+== body
+pg1 p1||Cover page[footnote][endnote]
+pg2 p2||Second page
+pg2 p3||The fee is 45 days.
+pg2 p4||Joined with next.
+pg2 p5||moved here
+pg2 p6||New paragraph.
+pg2 p7||Last.
+pg2 t1 r1||Name | Qty
+pg2 t1 r2||Apples green | x | y
+pg2 t1 r3|| | 5
+pg2 p8||After table
+pg2 t2 r1||second table
+pg2 p9||Before after
+pg2 tb1 p1||In the box
+pg2 tb1 p2||Second box line
+pg2 p10|1.(#0)|First
+pg2 p11|1.1.(#1)|Sub one
+pg2 p12|•(•0)|bullet
+pg2 p13|Article I(#0)|Scope
+pg2 p14|Article II(#0)|Terms
+== headers
+i1 p1||Page 2
+i2 p1 first page||Title page header
+== footers
+i1 p1||Footer
+== footnotes
+i1 p1||A footnote.
+== endnotes
+i1 p1||An endnote.
+== comments
+i1 p1||Ana: Is the cover final?
+i2 p1||Dan: Not anchored
+== tracked changes

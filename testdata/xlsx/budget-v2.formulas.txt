@@ -1,0 +1,22 @@
+== Budget hidden=false
+A1=Item
+B1=Amount
+C1=Due
+A2=Rent (office)
+B2=1250
+C2=2026-01-31
+A3=Utilities
+B3=180
+C3=2026-02-20
+A4=Insurance
+B4=150
+C4=2026-03-15
+A5=Software
+B5=120
+C5=2026-02-28
+A6=Total
+B6==SUM(B2:B5)
+== Notes hidden=false
+A1=Approved by the board in February.
+== Forecast hidden=false
+A1=2027 to follow.
