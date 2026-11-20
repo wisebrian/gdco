@@ -38,7 +38,7 @@ func readOffice(f File, o *Options) (*Document, error) {
 	case "word":
 		return readWord(f.Name, pkg, main, o)
 	case "excel":
-		return nil, fmt.Errorf("%w: %s is an Excel workbook, which is not supported yet", ErrUnsupported, name)
+		return readExcel(f.Name, pkg, main, o)
 	case "powerpoint":
 		return nil, fmt.Errorf("%w: %s is a PowerPoint presentation", ErrUnsupported, name)
 	}

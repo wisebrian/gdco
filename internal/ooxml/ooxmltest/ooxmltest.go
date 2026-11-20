@@ -8,6 +8,7 @@ import (
 	"bytes"
 	"path"
 	"sort"
+	"strconv"
 	"strings"
 )
 
@@ -97,4 +98,35 @@ func Docx(body string, extra map[string]string) []byte {
 		parts = append(parts, Part{n, extra[n]})
 	}
 	return Zip(parts...)
+}
+
+// Xlsx builds a workbook with one sheet per argument, named S1, S2 and so
+// on; each argument is the XML inside sheetData. strs, if any, are the
+// shared strings, as plain text.
+func Xlsx(strs []string, sheets ...string) []byte {
+	const rel = "http://schemas.openxmlformats.org/officeDocument/2006/relationships/"
+	const ns = `xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"`
+	var list, rels strings.Builder
+	var parts []Part
+	for i, s := range sheets {
+		n := strconv.Itoa(i + 1)
+		list.WriteString(`<sheet name="S` + n + `" sheetId="` + n + `" r:id="rs` + n + `"/>`)
+		rels.WriteString(`<Relationship Id="rs` + n + `" Type="` + rel + `worksheet" Target="worksheets/sheet` + n + `.xml"/>`)
+		parts = append(parts, Part{"xl/worksheets/sheet" + n + ".xml", `<worksheet ` + ns + `><sheetData>` + s + `</sheetData></worksheet>`})
+	}
+	if len(strs) > 0 {
+		var sst strings.Builder
+		for _, s := range strs {
+			sst.WriteString("<si><t>" + s + "</t></si>")
+		}
+		rels.WriteString(`<Relationship Id="rss" Type="` + rel + `sharedStrings" Target="sharedStrings.xml"/>`)
+		parts = append(parts, Part{"xl/sharedStrings.xml", `<sst ` + ns + `>` + sst.String() + `</sst>`})
+	}
+	return Zip(append([]Part{
+		{"[Content_Types].xml", `<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="xml" ContentType="application/xml"/>` +
+			`<Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/></Types>`},
+		{"_rels/.rels", `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="r1" Type="` + rel + `officeDocument" Target="xl/workbook.xml"/></Relationships>`},
+		{"xl/_rels/workbook.xml.rels", `<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">` + rels.String() + `</Relationships>`},
+		{"xl/workbook.xml", `<workbook ` + ns + `><sheets>` + list.String() + `</sheets></workbook>`},
+	}, parts...)...)
 }

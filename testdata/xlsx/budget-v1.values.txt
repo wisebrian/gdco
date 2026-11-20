@@ -1,0 +1,19 @@
+== Budget hidden=false
+A1=Item
+B1=Amount
+C1=Due
+A2=Rent (office)
+B2=1200
+C2=2026-01-31
+A3=Utilities
+B3=180
+C3=2026-02-15
+A4=Software
+B4=120
+C4=2026-02-28
+A5=Total
+B5=1500
+== Notes hidden=false
+A1=Approved by the board in January.
+== Archive hidden=false
+A1=2025 figures.

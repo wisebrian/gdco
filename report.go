@@ -166,6 +166,7 @@ func (h *htmlWriter) part(p PartDiff, single bool) {
 			h.str("<p class=\"meta\">No differences.</p>\n")
 		}
 	}
+	h.cells(p)
 	if len(p.Hunks) > 0 {
 		mono := ""
 		if h.r.A.Format == FormatText || h.r.B.Format == FormatText {
@@ -210,12 +211,18 @@ func (h *htmlWriter) hunk(p PartDiff, hk Hunk, end int) {
 		cols = "3"
 	}
 	h.str("<tbody>\n")
-	if gap := hk.A.Start - 1 - end; gap > 0 && hk.A.Count > 0 {
-		h.str("<tr class=\"gap\"><td colspan=\"" + cols + "\">⋯ " + plural(gap, "unchanged line") + "</td></tr>\n")
+	unit, header := "unchanged line", "Lines "+span(hk.A)+" → "+span(hk.B)
+	if p.Kind == PartSheet {
+		// A sheet's readers know its own row numbers, not the positions of
+		// rows among those that hold something.
+		unit, header = "unchanged row", "Rows "+sheetRows(hk, true)+" → "+sheetRows(hk, false)
 	}
-	h.str("<tr class=\"hh\"><td colspan=\"" + cols + "\">Lines " + span(hk.A) + " → " + span(hk.B))
+	if gap := hk.A.Start - 1 - end; gap > 0 && hk.A.Count > 0 {
+		h.str("<tr class=\"gap\"><td colspan=\"" + cols + "\">⋯ " + plural(gap, unit) + "</td></tr>\n")
+	}
+	h.str("<tr class=\"hh\"><td colspan=\"" + cols + "\">" + header)
 	for _, row := range hk.Rows {
-		if row.Op == OpEqual {
+		if row.Op == OpEqual || p.Kind == PartSheet {
 			continue
 		}
 		l := row.A
@@ -325,11 +332,11 @@ func (h *htmlWriter) inlineRows(p PartDiff, rows []Row) {
 		na, nb := "", ""
 		switch {
 		case row.Op == OpEqual:
-			na, nb = strconv.Itoa(row.A.N), strconv.Itoa(row.B.N)
+			na, nb = number(p, row.A), number(p, row.B)
 		case isA:
-			na = strconv.Itoa(l.N)
+			na = number(p, l)
 		default:
-			nb = strconv.Itoa(l.N)
+			nb = number(p, l)
 		}
 		cls := h.classOf(row, isA)
 		h.str("<td class=\"n" + cls + "\">" + na + "</td><td class=\"n" + cls + "\">" + nb + "</td>")
@@ -374,7 +381,7 @@ func (h *htmlWriter) cell(p PartDiff, l *Line, row Row) {
 		return
 	}
 	cls := h.classOf(row, isA)
-	h.str("<td class=\"n" + cls + "\">" + strconv.Itoa(l.N) + "</td>")
+	h.str("<td class=\"n" + cls + "\">" + number(p, l) + "</td>")
 	h.textCell(p, l, row, isA, cls)
 }
 
@@ -390,7 +397,7 @@ func (h *htmlWriter) textCell(p PartDiff, l *Line, row Row, isA bool, cls string
 		h.str("\"")
 	}
 	h.str(">")
-	if l.Marker != "" {
+	if l.Marker != "" && p.Kind != PartSheet {
 		h.str("<span class=\"mk\">")
 		h.text(l.Marker, false)
 		h.str("</span>")
@@ -570,6 +577,7 @@ h2{font-size:17px;margin:28px 0 8px;font-weight:600}
 .same{padding:14px 16px;border:1px solid var(--line);border-radius:8px;background:var(--head)}
 table.diff{width:100%;border-collapse:collapse;table-layout:fixed;border:1px solid var(--line);font-size:13.5px;margin:8px 0 16px}
 .diff col.cn{width:4.2em}
+.diff col.ca{width:8em}.cells td.n{text-align:left;white-space:nowrap}
 .diff th{position:sticky;top:0;background:var(--head);color:var(--muted);font-weight:600;text-align:left;padding:4px 8px;border-bottom:1px solid var(--line);overflow-wrap:anywhere}
 .diff td{vertical-align:top;padding:1px 8px}
 .diff .n{text-align:right;color:var(--num);white-space:nowrap;font-variant-numeric:tabular-nums;font-size:12px;padding-top:2px}
@@ -589,3 +597,73 @@ ins{background:var(--ins-mark);color:var(--ins-ink);text-decoration:underline;te
 footer{margin-top:24px;color:var(--muted);font-size:12px}
 @media (max-width:640px){body{padding:16px}.diff col.cn{width:3em}table.diff{font-size:12.5px}}
 `
+
+// number is the number shown beside a line: its line number, or for a
+// sheet its row number, which its marker also holds.
+func number(p PartDiff, l *Line) string {
+	if p.Kind == PartSheet && l.Loc.Row > 0 {
+		return strconv.Itoa(l.Loc.Row)
+	}
+	return strconv.Itoa(l.N)
+}
+
+// sheetRows renders the sheet rows a hunk covers on one side.
+func sheetRows(hk Hunk, a bool) string {
+	first, last := 0, 0
+	for _, r := range hk.Rows {
+		l := r.B
+		if a {
+			l = r.A
+		}
+		if l == nil {
+			continue
+		}
+		if first == 0 {
+			first = l.Loc.Row
+		}
+		last = l.Loc.Row
+	}
+	switch {
+	case first == 0:
+		return "none"
+	case first == last:
+		return strconv.Itoa(first)
+	}
+	return strconv.Itoa(first) + "–" + strconv.Itoa(last)
+}
+
+// cells writes the changed cells of a sheet, before its rows: in a
+// spreadsheet the address and the two values are what a reader wants
+// first.
+func (h *htmlWriter) cells(p PartDiff) {
+	if len(p.Cells) == 0 {
+		return
+	}
+	h.str("<table class=\"diff cells\">\n<colgroup><col class=\"ca\"><col><col></colgroup>\n<thead><tr><th>Cell</th><th>")
+	h.text(nameOr(h.r.A.Name, "A"), false)
+	h.str("</th><th>")
+	h.text(nameOr(h.r.B.Name, "B"), false)
+	h.str("</th></tr></thead>\n<tbody>\n")
+	for _, c := range p.Cells {
+		addr := c.A
+		if c.B != c.A {
+			addr = c.A + " → " + c.B
+		}
+		h.str("<tr><td class=\"n\">")
+		h.text(addr, false)
+		h.str("</td><td class=\"t del\" dir=\"auto\">")
+		if c.Old != "" {
+			h.str("<del>")
+			h.text(c.Old, true)
+			h.str("</del>")
+		}
+		h.str("</td><td class=\"t ins\" dir=\"auto\">")
+		if c.New != "" {
+			h.str("<ins>")
+			h.text(c.New, true)
+			h.str("</ins>")
+		}
+		h.str("</td></tr>\n")
+	}
+	h.str("</tbody>\n</table>\n")
+}

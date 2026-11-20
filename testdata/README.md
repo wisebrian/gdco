@@ -20,7 +20,11 @@ test. None was written by hand.
 | `fuzz/FuzzReport/5a52a8d79d04c6e6` | A document name that was not valid UTF-8 reached the HTML report unchanged. Names are now repaired when a document is made, and the HTML writer replaces invalid bytes itself. |
 | `fuzz/FuzzCompare/25caa8f3af603410` | `""` against `"\n"`: the test's own idea of equality was wrong (an empty file and a file with one empty line differ). The comparison was right; the test was fixed. |
 
-## Excel fixtures
+## `xlsx/`
 
-Phase 3 (`.xlsx`) adds its fixtures here, each with a line in this file
-saying how it was made.
+| File | How it was made |
+| --- | --- |
+| `src/budget-v1.fods`, `src/budget-v2.fods` | Flat OpenDocument spreadsheets, their rows written out by a short shell loop and checked by eye: a budget with a header row, a cell of rich text (bold "Rent", plain " (office)"), amounts, due dates in a date format, a SUM formula, a "Notes" sheet and an "Archive" sheet. Version 2 changes an amount and a date, inserts a row, extends the formula, edits the note, drops "Archive" and adds "Forecast". |
+| `budget-v1.xlsx`, `budget-v2.xlsx` | Converted from the sources by LibreOffice 26.8 with `make-libreoffice.sh` (`soffice --headless --convert-to xlsx`). The rich text becomes runs in `sharedStrings.xml`; dates become serial numbers with a date style. |
+| `excel-features.xlsx` | Written by `TestWriteFixtures` in `internal/xlsx` (`go test ./internal/xlsx -run TestWriteFixtures -update`), for what LibreOffice does not write: shared formulas, inline strings, booleans and errors, an `_x000D_` escape, phonetic runs, custom date and elapsed-time formats, a hidden sheet and a chart sheet. |
+| `*.values.txt`, `*.formulas.txt` | The cells read from each workbook, as "B7=value", with values and with formulas shown. `TestFixtures` in `internal/xlsx` compares against them; `-update` rewrites them, to be checked by eye. |

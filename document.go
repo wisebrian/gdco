@@ -56,6 +56,7 @@ type lineExtra struct {
 	marker string // shown before the text, not compared
 	shape  string // what is compared instead of the marker
 	loc    Location
+	cells  []sheetCell // the cells of a spreadsheet row
 }
 
 // Name returns the name used in report headers and in the "---" and "+++"

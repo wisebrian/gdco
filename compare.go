@@ -199,6 +199,10 @@ func (c *comparer) part(pa, pb *part) PartDiff {
 			}
 		}
 	}
+	if pa.kind == PartSheet {
+		pd.Cells = c.cellChanges(rows, pa, pb)
+		pd.Stats.CellsChanged = len(pd.Cells)
+	}
 	pd.Hunks = c.hunks(rows, pa, pb)
 	return pd
 }

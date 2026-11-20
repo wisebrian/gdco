@@ -1,0 +1,19 @@
+== Data hidden=false
+A1=Name
+B1=rich text
+C1=twolines
+A2=1
+B2=2
+C2=2023-03-15
+D2=36:00:00
+A3=2
+B3=4
+C3=TRUE
+D3=#N/A
+A4=3
+B4=6
+C4=inline
+D4=2023-03-15T06:00:00
+== Hidden hidden=true
+A1=42
+== skipped Chart

@@ -1,9 +1,9 @@
 # gdco
 
-Compares two texts or two Word documents and shows what changed, in Go
-with only the standard library, so that it can run as WebAssembly in a
-browser: the files people compare never leave their machine. Excel
-(`.xlsx`) support is coming in the next phase.
+Compares two texts, two Word documents or two Excel workbooks and shows
+what changed, in Go with only the standard library, so that it can run as
+WebAssembly in a browser: the files people compare never leave their
+machine.
 
 - Lines are aligned with Myers' O(ND) algorithm in linear space. Lines that
   replaced each other are then compared word by word, or character by
@@ -20,6 +20,13 @@ browser: the files people compare never leave their machine. Excel
   mark clauses 4 to 40. Headers, footers, footnotes, endnotes and comments
   are compared as parts of their own. Every line knows where it is:
   "Table 2, row 3", "Footnote 1", "Page 4, paragraph 12".
+- Excel workbooks (`.xlsx`, `.xlsm`) are compared sheet by sheet, matched
+  by name; a sheet on one side only is reported as added or removed. Rows
+  are aligned like lines, so an inserted row does not mark every row below
+  it, and the cells of aligned rows are compared by column: "B7 → B8:
+  1200 → 1250". Dates show as ISO dates (both the 1900 and the 1904 date
+  systems), other numbers as the file writes them; formulas can be
+  compared instead of their values.
 - Zip and XML input is treated as hostile: sizes, entry counts, compression
   ratios and XML nesting are bounded, and no entity or DTD is ever
   resolved.
@@ -60,7 +67,8 @@ A failure returns `{error, code}` instead. The options are `ignoreCase`,
 `ignoreBlankLines`, `granularity` (`"word"`, `"char"`, `"line"`), `context`
 (lines, `-1` for the whole document), `nameA`, `nameB`, for Word documents
 `tracked` (`"accepted"`, `"original"`) and `headers`, `footers`, `footnotes`,
-`endnotes`, `comments` (all `true` by default), and
+`endnotes`, `comments` (all `true` by default), for workbooks `formulas`,
+and
 `report: {title, layout, generated}`.
 
 ## Limits worth knowing

@@ -179,6 +179,9 @@ func FuzzRead(f *testing.F) {
 	for _, name := range []string{"contract-v1.docx", "contract-v2.docx", "word-features.docx"} {
 		f.Add(fixture(f, name).Data)
 	}
+	for _, name := range []string{"budget-v1.xlsx", "budget-v2.xlsx", "excel-features.xlsx"} {
+		f.Add(workbook(f, name).Data)
+	}
 	for _, s := range []string{"", "a\n", "\xEF\xBB\xBFa", "\xFF\xFEa\x00", "caf\xE9", "%PDF-1", "PK\x03\x04", "a\x00"} {
 		f.Add([]byte(s))
 	}
